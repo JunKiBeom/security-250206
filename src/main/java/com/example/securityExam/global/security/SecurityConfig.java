@@ -1,5 +1,6 @@
 package com.example.securityExam.global.security;
 
+import com.example.securityExam.global.dto.RsData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,20 @@ public class SecurityConfig {
                                 XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(
+                        exceptionHandling -> exceptionHandling
+                                .authenticationEntryPoint(
+                                        (request, response, authException) -> {
+                                            response.setContentType("application/json;charset=UTF-8");
+                                            response.setStatus(401);
+                                            response.getWriter().write(
+                                                    com.example.securityExam.standard.util.Ut.Json.toString(
+                                                            new RsData("401-1", "잘못된 인증키입니다.")
+                                                    )
+                                            );
+                                        }
+                                )
+                )
         ;
         return http.build();
     }

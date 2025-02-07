@@ -43,7 +43,7 @@ public class ResponseAspect {
             response.setStatus(statusCode);
         }
 
-        return rst;
+        return rst; // json으로 변환되어 응답
     }
 
 }
