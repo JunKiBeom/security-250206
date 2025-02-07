@@ -13,8 +13,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,7 +51,7 @@ public class ApiV1PostController {
             @RequestParam(defaultValue = "") String keyword
     ) {
 
-        Member actor = rq.getAuthenticatedActor();
+        Member actor = rq.getActor();
         Page<Post> pagePost = postService.getMines(actor, page, pageSize, keywordType, keyword);
 
         return new RsData<>("200-1",
@@ -72,7 +70,7 @@ public class ApiV1PostController {
         );
 
         if (!post.isPublished()) {
-            Member actor = rq.getAuthenticatedActor(); //
+            Member actor = rq.getActor(); //
             post.canRead(actor);
         }
 
@@ -91,19 +89,9 @@ public class ApiV1PostController {
 
     @PostMapping
     @Transactional
-    public RsData<PostWithContentDto> write(@RequestBody @Valid WriteReqBody reqBody,
-                                            @AuthenticationPrincipal UserDetails principal) {
+    public RsData<PostWithContentDto> write(@RequestBody @Valid WriteReqBody reqBody) {
 
-//        Principal principal = SecurityContextHolder.getContext().getAuthentication();
-
-        if(principal == null) {
-            throw new ServiceException("401-1", "로그인이 필요합니다.");
-        }
-
-        String username = principal.getUsername();
-        Member actor = memberService.findByUsername(username).get();
-
-
+        Member actor = rq.getActor();
 //        Member actor = rq.getAuthenticatedActor();
         Post post = postService.write(actor, reqBody.title(), reqBody.content(), reqBody.published(), reqBody.listed());
 
@@ -121,7 +109,7 @@ public class ApiV1PostController {
     @Transactional
     public RsData<PostWithContentDto> modify(@PathVariable long id, @RequestBody @Valid ModifyReqBody reqBody) {
 
-        Member actor = rq.getAuthenticatedActor();
+        Member actor = rq.getActor();
 
         Post post = postService.getItem(id).orElseThrow(
                 () -> new ServiceException("404-1", "존재하지 않는 글입니다.")
@@ -141,7 +129,7 @@ public class ApiV1PostController {
     @Transactional
     public RsData<Void> delete(@PathVariable long id) {
 
-        Member actor = rq.getAuthenticatedActor();
+        Member actor = rq.getActor();
 
         Post post = postService.getItem(id).orElseThrow(
                 () -> new ServiceException("404-1", "존재하지 않는 글입니다.")
